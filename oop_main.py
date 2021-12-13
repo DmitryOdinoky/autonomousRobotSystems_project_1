@@ -22,7 +22,7 @@ class myGame:
         
         self._VARS = _VARS
         
-        self.uploadMaze('/assets/worldMaps/WM_10_x_10.csv')
+        self.uploadMaze('/autonomousRobotSystems_project_1/assets/worldMaps/WM_10_x_10.csv')
         
         self.dict = {
             
@@ -81,13 +81,13 @@ class myGame:
         self.cellSize = _VARS['gridSize']/_VARS['cellCount']
         self.exitPos = [_VARS['cellCount']-1, _VARS['cellCount']-1]
         
-        self.putTagsToMap('/assets/worldMaps/WM_10_x_10_tags.csv')
-        self.uploadModels('/assets/models/sensors_error_model.csv', '/assets/models/movement_error_model.csv')
+        self.putTagsToMap('/autonomousRobotSystems_project_1/assets/worldMaps/WM_10_x_10_tags.csv')
+        self.uploadModels('/autonomousRobotSystems_project_1/assets/models/sensors_error_model.csv', '/autonomousRobotSystems_project_1/assets/models/movement_error_model.csv')
         self.initMarkovAlgo()
         
 
         
-        self.uploadModels(sensorsError = '/assets/models/sensors_error_model.csv', odoError = '/assets/models/movement_error_model.csv')
+        self.uploadModels(sensorsError = '/autonomousRobotSystems_project_1/assets/models/sensors_error_model.csv', odoError = '/autonomousRobotSystems_project_1/assets/models/movement_error_model.csv')
         
         self.tagToMeasurement()
         
@@ -307,10 +307,10 @@ class myGame:
             self.generatedWeightsMatrix = np.array(generatedWeightsMatrix)
             
             arrSum = []
-            
+            maximum = np.max(self.generatedWeightsMatrix)
             for cell in self.generatedWeightsMatrix:
                 
-                if(cell!=20): arrSum.append(cell)
+                if(cell!=maximum): arrSum.append(cell)
                 
             arrSum = np.array(arrSum)
             
@@ -471,65 +471,81 @@ class myGame:
             
          
 
-
+        
             
             # Filter key press
   
-            self.tagToMeasurement()    
+            self.tagToMeasurement()
+            odoError = np.random.choice([1,0], replace=True, p=self.odoError[::].tolist())
                 
-            if self.checkEvents(event) == 'Up':
-                self.iterateMarkovAlgoMove()
+            if (self.checkEvents(event) == 'Up' and odoError == 1):
+                self._VARS['playerPos'][2] = 90
                 
+                self.iterateMarkovAlgoMove()             
                 if int(self._VARS['playerPos'][1] - self.cellSize) >= 0:
-                    self._VARS['playerPos'][2] = 90
+                    
                     
                     if self._VARS['cellMAP'][yPos-1][xPos] != 1:
                         
                         self._VARS['playerPos'][1] = self._VARS['playerPos'][1] - self.cellSize
-                        
+                    else: 
+                        print('ILLEGAL MOVE!')                        
                         
                 
                 # self.checkObjects(xPos, yPos)
                         
 
-            elif self.checkEvents(event) == 'Down':
+            elif (self.checkEvents(event) == 'Down' and odoError == 1):
+                self._VARS['playerPos'][2] = 270
                 self.iterateMarkovAlgoMove()
                 
                 if int(self._VARS['playerPos'][1] + self.cellSize) < self._VARS['gridSize']-1:
-                    self._VARS['playerPos'][2] = 270
+                    
                     
                     if self._VARS['cellMAP'][yPos+1][xPos] != 1:
                         self._VARS['playerPos'][1] = self._VARS['playerPos'][1] + self.cellSize
-                        
+                    else: 
+                        print('ILLEGAL MOVE!')                        
                         
                 # self.checkObjects(xPos, yPos)
                         
                 
-            elif self.checkEvents(event) == 'Left':
-                self.iterateMarkovAlgoMove()
+            elif (self.checkEvents(event) == 'Left' and odoError == 1):
                 self._VARS['playerPos'][2] = 180
+                self.iterateMarkovAlgoMove()
+                
                 
                 if int(self._VARS['playerPos'][0] - self.cellSize) >= 0:
                     
                     if self._VARS['cellMAP'][yPos][xPos-1] != 1:
                         self._VARS['playerPos'][0] = self._VARS['playerPos'][0] - self.cellSize
-                        
+                    else: 
+                        print('ILLEGAL MOVE!')                        
                         
                 # self.checkObjects(xPos, yPos)        
                         
-            elif self.checkEvents(event) == 'Right':
-                self.iterateMarkovAlgoMove()
+            elif (self.checkEvents(event) == 'Right' and odoError == 1):
                 self._VARS['playerPos'][2] = 0
+                self.iterateMarkovAlgoMove()
+                
                 
                 if int(self._VARS['playerPos'][0] + self.cellSize) < self._VARS['gridSize']-1:
                     
                     if self._VARS['cellMAP'][yPos][xPos+1] != 1:
                         self._VARS['playerPos'][0] = self._VARS['playerPos'][0] + self.cellSize
+                    else: 
+                        print('ILLEGAL MOVE!')
+            else:
+                
+                print('ROBOT FAILED TO MOVE!')
                         
             
                 
                 # self.checkObjects(xPos, yPos)
-                        
+
+            xPos = int(math.ceil(self._VARS['playerPos'][0]/self.cellSize))
+            yPos = int(math.ceil(self._VARS['playerPos'][1]/self.cellSize))
+            theta = self._VARS['playerPos'][2]                        
         
             print(f'Actual position: (x:{[xPos]}), (y:{[yPos]}), (theta: {theta} degrees)')
             
